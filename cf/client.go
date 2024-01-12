@@ -2,14 +2,17 @@ package cf
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/xxxsen/common/logutil"
+	"go.uber.org/zap"
 )
 
 const (
@@ -24,20 +27,30 @@ type identify struct {
 }
 
 type Client struct {
-	c      *Config
+	logger *zap.Logger
+	c      *cfConfig
 	netcli *http.Client
 	lastip string
 	idt    *identify
 }
 
-func New(opts ...Option) *Client {
-	c := &Config{}
+func New(opts ...Option) (*Client, error) {
+	c := &cfConfig{
+		interval: time.Minute,
+		callback: noCallback,
+	}
 	for _, opt := range opts {
 		opt(c)
 	}
-	return &Client{c: c, netcli: &http.Client{
-		Timeout: 10 * time.Second,
-	}}
+	if len(c.authKey) == 0 || len(c.authMail) == 0 || len(c.recName) == 0 || len(c.zoneName) == 0 {
+		return nil, fmt.Errorf("invalid params")
+	}
+	return &Client{c: c,
+		netcli: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+		logger: logutil.GetLogger(context.Background()).With(zap.String("client_name", c.clientName)),
+	}, nil
 }
 
 func (c *Client) getZoneIDTURI(zonename string) string {
@@ -138,9 +151,9 @@ func (c *Client) buildHeader(req *http.Request) {
 	req.Header.Set("X-Auth-Email", c.c.authMail)
 }
 
-func (c *Client) RefreshDNS(ipstr string) error {
-	if net.ParseIP(ipstr) == nil {
-		return fmt.Errorf("invalid ip:%s", ipstr)
+func (c *Client) refreshDNS(ip string) error {
+	if net.ParseIP(ip) == nil {
+		return fmt.Errorf("invalid ip:%s", ip)
 	}
 	if c.idt == nil {
 		if err := c.buildIdentify(); err != nil {
@@ -155,9 +168,9 @@ func (c *Client) RefreshDNS(ipstr string) error {
 	c.buildHeader(httpReq)
 	req := &DDNSUpdateReq{
 		ID:      c.idt.Zone,
-		Type:    "A",
+		Type:    c.c.recType,
 		Name:    c.c.recName,
-		Content: ipstr,
+		Content: ip,
 	}
 	rsp := &DDNSUpdateRsp{}
 	if err := c.jsonCaller(httpReq, req, rsp); err != nil {
@@ -169,23 +182,6 @@ func (c *Client) RefreshDNS(ipstr string) error {
 	return nil
 }
 
-func (c *Client) GetMyPublicIP() (string, error) {
-	request, err := http.NewRequest(http.MethodGet, c.c.ipProvider, nil)
-	if err != nil {
-		return "", err
-	}
-	rsp, err := c.netcli.Do(request)
-	if err != nil {
-		return "", err
-	}
-	defer rsp.Body.Close()
-	data, err := ioutil.ReadAll(rsp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
-}
-
 func (c *Client) onCallback(newip string, oldip string, err error) {
 	if newip == oldip && err == nil {
 		return
@@ -195,37 +191,37 @@ func (c *Client) onCallback(newip string, oldip string, err error) {
 	}
 }
 
-func (c *Client) refresh() {
+func (c *Client) refresh(ctx context.Context) {
 	var newip string
 	var err error
 	var oldip = c.lastip
+	logger := c.logger.With(zap.String("ip_type", c.c.recType), zap.String("old_ip", oldip))
 	defer func() {
 		c.onCallback(newip, oldip, err)
 	}()
-	newip, err = c.GetMyPublicIP()
+	newip, err = c.c.provider.Get()
 	if err != nil {
-		log.Printf("get ip fail, provider:%s, err:%v", c.c.ipProvider, err)
+		logger.Error("get ip fail", zap.Error(err))
 		return
 	}
+	logger = logger.With(zap.String("new_ip", newip))
 	if newip == oldip && len(oldip) != 0 {
 		return
 	}
-	err = c.RefreshDNS(newip)
+	err = c.refreshDNS(newip)
 	if err != nil {
-		log.Printf("refresh ip failed, old ip:%s, new ip:%s, err:%v", oldip, newip, err)
+		logger.Error("refresh ip failed", zap.Error(err))
 		return
 	}
-	log.Printf("refresh ip succ, old ip:%s, new ip:%s", oldip, newip)
+	logger.Info("refresh ip succ")
 	c.lastip = newip
-
 }
 
-func (c *Client) StartRefresh(duration time.Duration) {
-	if duration == 0 {
-		duration = 10 * time.Second
-	}
-	for {
-		c.refresh()
-		time.Sleep(duration)
+func (c *Client) Start() {
+	ticker := time.NewTicker(c.c.interval)
+	defer ticker.Stop()
+	ctx := context.Background()
+	for range ticker.C {
+		c.refresh(ctx)
 	}
 }
