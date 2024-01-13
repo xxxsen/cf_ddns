@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	ddnsUpdateURI    = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
-	ddnsZoneIDTURI   = "https://api.cloudflare.com/client/v4/zones?name=%s"
-	ddnsRecordIDTURI = "https://api.cloudflare.com/client/v4/zones/%s/dns_records?name=%s"
+	ddnsUpdateURI       = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
+	ddnsZoneIDTURI      = "https://api.cloudflare.com/client/v4/zones?name=%s"
+	ddnsRecordIDTURI    = "https://api.cloudflare.com/client/v4/zones/%s/dns_records?name=%s"
+	ddnsCreateRecordURI = "https://api.cloudflare.com/client/v4/zones/%s/dns_records"
 )
 
 type Client struct {
@@ -92,13 +93,10 @@ func (c *Client) GetZoneIdentifier(ctx context.Context, req *GetZoneIdentifierRe
 	if err != nil {
 		return nil, err
 	}
-	rsp := &GetZoneIdentifierResponse{Exist: false}
-	if len(rpcRsp.Result) > 0 {
-		rsp.Exist = true
-		rsp.Identifier = rpcRsp.Result[0].Id
+	if len(rpcRsp.Result) == 0 {
+		return nil, ErrIdentifierNotFound
 	}
-	return rsp, nil
-
+	return &GetZoneIdentifierResponse{Identifier: rpcRsp.Result[0].Id}, nil
 }
 
 func (c *Client) GetRecordIdentifier(ctx context.Context, req *GetRecordIdentifierRequest) (*GetRecordIdentifierResponse, error) {
@@ -107,12 +105,10 @@ func (c *Client) GetRecordIdentifier(ctx context.Context, req *GetRecordIdentifi
 	if err := c.makeRequestWrap(ctx, http.MethodGet, uri, nil, rpcRsp); err != nil {
 		return nil, err
 	}
-	rsp := &GetRecordIdentifierResponse{Exist: false}
-	if len(rpcRsp.Result) > 0 {
-		rsp.Exist = true
-		rsp.Identifier = rpcRsp.Result[0].Id
+	if len(rpcRsp.Result) == 0 {
+		return nil, ErrIdentifierNotFound
 	}
-	return rsp, nil
+	return &GetRecordIdentifierResponse{Identifier: rpcRsp.Result[0].Id}, nil
 }
 
 func (c *Client) SetRecordIP(ctx context.Context, req *SetRecordIPRequest) (*SetRecordIPResponse, error) {
@@ -133,4 +129,23 @@ func (c *Client) SetRecordIP(ctx context.Context, req *SetRecordIPRequest) (*Set
 		return nil, err
 	}
 	return &SetRecordIPResponse{}, nil
+}
+
+func (c *Client) CreateRecord(ctx context.Context, req *CreateRecordRequest) (*CreateRecordResponse, error) {
+	uri := fmt.Sprintf(ddnsCreateRecordURI, req.ZoneIdentify)
+	if req.TTL == 0 {
+		req.TTL = 120
+	}
+	rpcReq := &rpcCreateRecordRequest{
+		Type:    req.RecordType,
+		Name:    req.RecordName,
+		Content: req.IP,
+		TTL:     req.TTL,
+		Proxied: req.Proxied,
+	}
+	rpcRsp := &rpcCreateRecordResponse{}
+	if err := c.makeRequestWrap(ctx, http.MethodPost, uri, rpcReq, rpcRsp); err != nil {
+		return nil, err
+	}
+	return &CreateRecordResponse{}, nil
 }

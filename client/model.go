@@ -61,7 +61,6 @@ type rpcGetZoneIdentifierResponse struct {
 }
 
 type GetZoneIdentifierResponse struct {
-	Exist      bool
 	Identifier string
 }
 
@@ -81,6 +80,31 @@ type rpcGetRecordIdentifierResponse struct {
 }
 
 type GetRecordIdentifierResponse struct {
-	Exist      bool
 	Identifier string
+}
+
+//
+
+type CreateRecordRequest struct {
+	ZoneIdentify string
+	RecordType   string
+	RecordName   string
+	IP           string
+	TTL          int
+	Proxied      bool
+}
+
+type CreateRecordResponse struct {
+}
+
+type rpcCreateRecordRequest struct {
+	Type    string `json:"type"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	TTL     int    `json:"ttl"`
+	Proxied bool   `json:"proxied"`
+}
+
+type rpcCreateRecordResponse struct {
+	BaseResponse
 }
