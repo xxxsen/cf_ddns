@@ -30,6 +30,7 @@ type CloudflareConfig struct {
 
 type RefreshCongfig struct {
 	Name             string           `json:"name"`
+	Disable          bool             `json:"disable"`
 	Providers        []string         `json:"providers"`
 	CloudflareConfig CloudflareConfig `json:"cloudflare_config"`
 	RefreshInterval  int              `json:"refresh_interval"`

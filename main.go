@@ -59,6 +59,9 @@ func findProviderFromMap(ps []string, pm map[string]provider.IProvider) ([]provi
 func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]provider.IProvider, ntsm map[string]notifier.INotifier) ([]*refresher.Refresher, error) {
 	rs := make([]*refresher.Refresher, 0, len(refresherConfigList))
 	for _, item := range refresherConfigList {
+		if item.Disable {
+			continue
+		}
 		pvList, err := findProviderFromMap(item.Providers, pm)
 		if err != nil {
 			return nil, fmt.Errorf("find providers failed, err:%v", err)
