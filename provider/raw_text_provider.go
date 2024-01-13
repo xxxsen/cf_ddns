@@ -7,8 +7,7 @@ import (
 )
 
 type rawTextProvider struct {
-	name string
-	url  string
+	url string
 }
 
 func (p *rawTextProvider) Name() string {
