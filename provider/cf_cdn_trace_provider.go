@@ -39,7 +39,7 @@ func (t *cfCDNTraceProvider) Get() (string, error) {
 }
 
 func createCFCDNTraceProvider(args interface{}) (IProvider, error) {
-	c := &cfCDNTraceProviderConfig{}
+	c := &CFCDNTraceProviderConfig{}
 	if err := utils.ConvStructJson(args, c); err != nil {
 		return nil, err
 	}

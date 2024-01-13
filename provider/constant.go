@@ -4,4 +4,5 @@ const (
 	ProviderCFCDNTrace = "cf_cdn_trace"
 	ProviderRawText    = "raw_text"
 	ProviderJson       = "json"
+	ProviderMachine    = "machine"
 )

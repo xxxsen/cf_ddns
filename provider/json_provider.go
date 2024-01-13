@@ -37,7 +37,7 @@ func (p *jsonProvider) Get() (string, error) {
 }
 
 func createJsonProvider(args interface{}) (IProvider, error) {
-	c := &jsonProviderConfig{}
+	c := &JsonProviderConfig{}
 	if err := utils.ConvStructJson(args, c); err != nil {
 		return nil, err
 	}
