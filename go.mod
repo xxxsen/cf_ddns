@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/xxxsen/common v0.1.1
+	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	go.uber.org/zap v1.23.0
 )
 
