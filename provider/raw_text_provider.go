@@ -21,7 +21,7 @@ func (p *rawTextProvider) Get() (string, error) {
 	})
 }
 
-func createRawTextProvider(args interface{}) (IPProvider, error) {
+func createRawTextProvider(args interface{}) (IProvider, error) {
 	c := &rawTextProviderConfig{}
 	if err := utils.ConvStructJson(args, c); err != nil {
 		return nil, err

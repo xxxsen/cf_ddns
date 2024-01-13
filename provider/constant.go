@@ -1,14 +1,6 @@
 package provider
 
-type IPType string
-
 const (
-	IPV4 IPType = "ipv4"
-	IPV6 IPType = "ipv6"
-)
-
-const (
-	ProviderCFCDNTrace = "cf_cdn"
-	ProviderSendev     = "sendev"
+	ProviderCFCDNTrace = "cf_cdn_trace"
 	ProviderRawText    = "raw_text"
 )

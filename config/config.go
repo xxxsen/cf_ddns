@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"time"
 )
 
 type ProviderConfig struct {
 	Name string      `json:"name"`
+	Type string      `json:"type"`
 	Data interface{} `json:"data"`
 }
 
@@ -18,18 +18,20 @@ type CloudflareConfig struct {
 	RecordType string `json:"record_type"`
 	RecordName string `json:"record_name"`
 	ZoneName   string `json:"zone_name"`
+	TTL        int    `json:"ttl"`
+	Proxied    bool   `json:"proxied"`
 }
 
 type RefreshCongfig struct {
 	Name             string           `json:"name"`
 	Providers        []string         `json:"providers"`
 	CloudflareConfig CloudflareConfig `json:"cloudflare_config"`
-	RefreshInterval  time.Duration    `json:"refresh_interval"`
+	RefreshInterval  int              `json:"refresh_interval"`
 }
 
 type Config struct {
-	ProviderList   []ProviderConfig `json:"provider_list"`
-	RefreshCongfig []RefreshCongfig `json:"refresh_config"`
+	ProviderList  []ProviderConfig `json:"provider_list"`
+	RefresherList []RefreshCongfig `json:"refresher_list"`
 }
 
 func Parse(file string) (*Config, error) {

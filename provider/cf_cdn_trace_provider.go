@@ -38,7 +38,7 @@ func (t *cfCDNTraceProvider) Get() (string, error) {
 	return findIPByURL(t.url, t.findIPFromText)
 }
 
-func createCFCDNTraceProvider(args interface{}) (IPProvider, error) {
+func createCFCDNTraceProvider(args interface{}) (IProvider, error) {
 	c := &cfCDNTraceProviderConfig{}
 	if err := utils.ConvStructJson(args, c); err != nil {
 		return nil, err

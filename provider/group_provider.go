@@ -3,10 +3,10 @@ package provider
 import "strings"
 
 type groupProvider struct {
-	lst []IPProvider
+	lst []IProvider
 }
 
-func NewGroup(ps ...IPProvider) IPProvider {
+func NewGroup(ps ...IProvider) IProvider {
 	return &groupProvider{lst: ps}
 }
 
