@@ -1,0 +1,38 @@
+name: Build and Release
+
+on:
+  create:
+    tags:
+      - 'v*' # 触发条件为以 'v' 开头的 tag
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.21
+
+    - name: Build
+      run: CGO_ENABLED=0 go build -a -tags netgo -ldflags '-w' -o cf_ddns ./
+
+    - name: Archive
+      run: tar -czvf cf_ddns.tar.gz cf_ddns
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Upload Release Asset
+      id: upload-release
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ needs.build.outputs.upload_url }}
+        asset_path: ./cf_ddns.tar.gz
+        asset_name: cf_ddns.tar.gz
+        asset_content_type: application/gzip
