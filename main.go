@@ -4,6 +4,8 @@ import (
 	"cf_ddns/adaptor"
 	"cf_ddns/client"
 	"cf_ddns/config"
+	"cf_ddns/notifier"
+	_ "cf_ddns/notifier/tgmsger"
 	"cf_ddns/provider"
 	"cf_ddns/refresher"
 	"context"
@@ -11,7 +13,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/xxxsen/common/logutil"
+	"github.com/xxxsen/common/logger"
 	"github.com/xxxsen/runner"
 	"go.uber.org/zap"
 )
@@ -30,6 +32,18 @@ func createProviderMap(items []config.ProviderConfig) (map[string]provider.IProv
 	return rs, nil
 }
 
+func createNotifierMap(items []config.NotifierConfig) (map[string]notifier.INotifier, error) {
+	rs := make(map[string]notifier.INotifier)
+	for _, item := range items {
+		nt, err := notifier.MakeNotifier(item.Type, item.Data)
+		if err != nil {
+			return nil, err
+		}
+		rs[item.Name] = nt
+	}
+	return rs, nil
+}
+
 func findProviderFromMap(ps []string, pm map[string]provider.IProvider) ([]provider.IProvider, error) {
 	rs := make([]provider.IProvider, 0, len(ps))
 	for _, p := range ps {
@@ -42,7 +56,7 @@ func findProviderFromMap(ps []string, pm map[string]provider.IProvider) ([]provi
 	return rs, nil
 }
 
-func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]provider.IProvider) ([]*refresher.Refresher, error) {
+func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]provider.IProvider, ntsm map[string]notifier.INotifier) ([]*refresher.Refresher, error) {
 	rs := make([]*refresher.Refresher, 0, len(refresherConfigList))
 	for _, item := range refresherConfigList {
 		pvList, err := findProviderFromMap(item.Providers, pm)
@@ -51,6 +65,14 @@ func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]p
 		}
 		if len(pvList) == 0 {
 			return nil, fmt.Errorf("no provider found, name:%s", item.Name)
+		}
+		nt, ok := ntsm[item.Notifier]
+		if !ok && len(item.Notifier) == 0 {
+			nt = notifier.NopNotifier
+			ok = true
+		}
+		if !ok {
+			return nil, fmt.Errorf("notifier:%s invalid", item.Notifier)
 		}
 		cli, err := client.New(
 			client.WithAuth(item.CloudflareConfig.Key, item.CloudflareConfig.EMail),
@@ -71,6 +93,7 @@ func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]p
 			refresher.WithInterval(time.Duration(item.RefreshInterval)*time.Second),
 			refresher.WithRefresherFunc(refresherFn),
 			refresher.WithName(item.Name),
+			refresher.WithCallback(adaptor.NotifierClientToRefreshCallback(nt)),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("create refresher failed, name:%s, err:%v", item.Name, err)
@@ -81,8 +104,9 @@ func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]p
 }
 
 func main() {
-	logger := logutil.GetLogger(context.Background())
+	logger := logger.Init("", "info", 0, 0, 0, true)
 	logger.Info("support providers", zap.Strings("providers", provider.List()))
+	logger.Info("support notifiers", zap.Strings("notifiers", notifier.List()))
 	flag.Parse()
 	c, err := config.Parse(*cfg)
 	if err != nil {
@@ -92,7 +116,11 @@ func main() {
 	if err != nil {
 		logger.Fatal("create provider map failed", zap.Error(err))
 	}
-	clients, err := buildRefresher(c.RefresherList, ps)
+	nts, err := createNotifierMap(c.NotifierList)
+	if err != nil {
+		logger.Fatal("create notifier map failed", zap.Error(err))
+	}
+	clients, err := buildRefresher(c.RefresherList, ps, nts)
 	if err != nil {
 		logger.Fatal("create refresh client failed", zap.Error(err))
 	}

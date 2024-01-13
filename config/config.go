@@ -12,6 +12,12 @@ type ProviderConfig struct {
 	Data interface{} `json:"data"`
 }
 
+type NotifierConfig struct {
+	Name string      `json:"name"`
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
+}
+
 type CloudflareConfig struct {
 	Key        string `json:"key"`
 	EMail      string `json:"email"`
@@ -27,10 +33,12 @@ type RefreshCongfig struct {
 	Providers        []string         `json:"providers"`
 	CloudflareConfig CloudflareConfig `json:"cloudflare_config"`
 	RefreshInterval  int              `json:"refresh_interval"`
+	Notifier         string           `json:"notifier"`
 }
 
 type Config struct {
 	ProviderList  []ProviderConfig `json:"provider_list"`
+	NotifierList  []NotifierConfig `json:"notifier_list"`
 	RefresherList []RefreshCongfig `json:"refresher_list"`
 }
 
