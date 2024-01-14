@@ -2,7 +2,6 @@ package adaptor
 
 import (
 	"cf_ddns/client"
-	"cf_ddns/notifier"
 	"cf_ddns/refresher"
 	"context"
 	"fmt"
@@ -85,15 +84,5 @@ func CFClientToRefresherFunc(cli *client.Client, zone string, recordType string,
 			return err
 		}
 		return nil
-	}
-}
-
-func NotifierClientToRefreshCallback(cli notifier.INotifier) refresher.CallbackFunc {
-	return func(ctx context.Context, name, domain, oldip, newip string) error {
-		msg := fmt.Sprintf("[CF_DDNS: %s]: refresher: %s, refresh ip to: %s", domain, name, newip)
-		if len(oldip) > 0 {
-			msg += ", old ip: " + oldip
-		}
-		return cli.Notify(ctx, msg)
 	}
 }

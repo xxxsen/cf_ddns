@@ -1,9 +1,8 @@
 package notifier
 
-import "context"
-
-const (
-	defaultNopNotifierName = "nop"
+import (
+	"cf_ddns/model"
+	"context"
 )
 
 var (
@@ -14,10 +13,10 @@ type nopNotifier struct {
 }
 
 func (n *nopNotifier) Name() string {
-	return defaultNopNotifierName
+	return NameNop
 }
 
-func (n *nopNotifier) Notify(ctx context.Context, msg string) error {
+func (n *nopNotifier) Notify(ctx context.Context, msg *model.Notification) error {
 	return nil
 }
 
@@ -25,5 +24,5 @@ func init() {
 	creator := func(interface{}) (INotifier, error) {
 		return NopNotifier, nil
 	}
-	Register(defaultNopNotifierName, creator)
+	Register(NameNop, creator)
 }

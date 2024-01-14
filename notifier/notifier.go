@@ -1,13 +1,14 @@
 package notifier
 
 import (
+	"cf_ddns/model"
 	"context"
 	"fmt"
 )
 
 type INotifier interface {
 	Name() string
-	Notify(ctx context.Context, msg string) error
+	Notify(ctx context.Context, msg *model.Notification) error
 }
 
 type NotifierCreator func(args interface{}) (INotifier, error)

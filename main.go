@@ -96,7 +96,7 @@ func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]p
 			refresher.WithInterval(time.Duration(item.RefreshInterval)*time.Second),
 			refresher.WithRefresherFunc(refresherFn),
 			refresher.WithName(item.Name),
-			refresher.WithCallback(adaptor.NotifierClientToRefreshCallback(nt)),
+			refresher.WithCallback(nt.Notify),
 			refresher.WithDomain(item.CloudflareConfig.RecordName),
 		)
 		if err != nil {

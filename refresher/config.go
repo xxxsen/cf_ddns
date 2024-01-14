@@ -1,15 +1,16 @@
 package refresher
 
 import (
+	"cf_ddns/model"
 	"cf_ddns/provider"
 	"context"
 	"time"
 )
 
 type RefresherFunc func(ctx context.Context, ip string) error
-type CallbackFunc func(ctx context.Context, clientname string, domain string, oldip string, newip string) error
+type CallbackFunc func(ctx context.Context, nt *model.Notification) error
 
-var noCB CallbackFunc = func(ctx context.Context, clientname, domain, oldip, newip string) error { return nil }
+var noCB CallbackFunc = func(ctx context.Context, nt *model.Notification) error { return nil }
 
 type config struct {
 	name     string
