@@ -60,7 +60,7 @@ func (r *Refresher) refresh() {
 		logger.Error("update ip failed", zap.Error(err))
 		return
 	}
-	if err := r.c.cb(ctx, r.c.name, r.lastip, newip); err != nil {
+	if err := r.c.cb(ctx, r.c.name, r.c.record, r.lastip, newip); err != nil {
 		logger.Error("notify ip changed failed", zap.Error(err))
 	}
 	r.lastip = newip

@@ -89,8 +89,8 @@ func CFClientToRefresherFunc(cli *client.Client, zone string, recordType string,
 }
 
 func NotifierClientToRefreshCallback(cli notifier.INotifier) refresher.CallbackFunc {
-	return func(ctx context.Context, name, oldip, newip string) error {
-		msg := fmt.Sprintf("[CF_DDNS]: refresher: %s, refresh ip to: %s", name, newip)
+	return func(ctx context.Context, name, domain, oldip, newip string) error {
+		msg := fmt.Sprintf("[CF_DDNS: %s]: refresher: %s, refresh ip to: %s", domain, name, newip)
 		if len(oldip) > 0 {
 			msg += ", old ip: " + oldip
 		}

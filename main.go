@@ -97,6 +97,7 @@ func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]p
 			refresher.WithRefresherFunc(refresherFn),
 			refresher.WithName(item.Name),
 			refresher.WithCallback(adaptor.NotifierClientToRefreshCallback(nt)),
+			refresher.WithDomain(item.CloudflareConfig.RecordName),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("create refresher failed, name:%s, err:%v", item.Name, err)

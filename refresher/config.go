@@ -7,9 +7,9 @@ import (
 )
 
 type RefresherFunc func(ctx context.Context, ip string) error
-type CallbackFunc func(ctx context.Context, name string, oldip string, newip string) error
+type CallbackFunc func(ctx context.Context, clientname string, domain string, oldip string, newip string) error
 
-var noCB CallbackFunc = func(ctx context.Context, name, oldip, newip string) error { return nil }
+var noCB CallbackFunc = func(ctx context.Context, clientname, domain, oldip, newip string) error { return nil }
 
 type config struct {
 	name     string
@@ -17,6 +17,7 @@ type config struct {
 	pv       provider.IProvider
 	duration time.Duration
 	cb       CallbackFunc
+	record   string
 }
 
 type Option func(c *config)
@@ -48,5 +49,11 @@ func WithName(name string) Option {
 func WithCallback(cb CallbackFunc) Option {
 	return func(c *config) {
 		c.cb = cb
+	}
+}
+
+func WithDomain(domain string) Option {
+	return func(c *config) {
+		c.record = domain
 	}
 }
