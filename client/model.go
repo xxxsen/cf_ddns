@@ -66,6 +66,7 @@ type GetZoneIdentifierResponse struct {
 
 type GetRecordIdentifierRequest struct {
 	ZoneIdentify string
+	RecordType   string
 	RecordName   string
 }
 

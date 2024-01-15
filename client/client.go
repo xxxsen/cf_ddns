@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -105,10 +106,12 @@ func (c *Client) GetRecordIdentifier(ctx context.Context, req *GetRecordIdentifi
 	if err := c.makeRequestWrap(ctx, http.MethodGet, uri, nil, rpcRsp); err != nil {
 		return nil, err
 	}
-	if len(rpcRsp.Result) == 0 {
-		return nil, ErrIdentifierNotFound
+	for _, item := range rpcRsp.Result {
+		if strings.EqualFold(item.Type, req.RecordType) {
+			return &GetRecordIdentifierResponse{Identifier: item.Id}, nil
+		}
 	}
-	return &GetRecordIdentifierResponse{Identifier: rpcRsp.Result[0].Id}, nil
+	return nil, ErrIdentifierNotFound
 }
 
 func (c *Client) SetRecordIP(ctx context.Context, req *SetRecordIPRequest) (*SetRecordIPResponse, error) {
