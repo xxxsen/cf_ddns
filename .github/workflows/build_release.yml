@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        go-os: [windows, linux, darwin]  # 可以根据需要添加或修改
+        go-os: [windows, linux, darwin, freebsd]  # 可以根据需要添加或修改
         go-arch: [amd64]         # 可以根据需要添加或修改
         include:
           - go-os: linux
@@ -20,6 +20,8 @@ jobs:
             go-arch: arm64
           - go-os: darwin
             go-arch: arm64
+          - go-os: freebsd
+            go-arch: amd64
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
