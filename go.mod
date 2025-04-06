@@ -1,9 +1,11 @@
 module cf_ddns
 
-go 1.20
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
-	github.com/xxxsen/common v0.1.1
+	github.com/xxxsen/common v0.1.21
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	go.uber.org/zap v1.23.0
 )
@@ -20,6 +22,6 @@ require (
 
 require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.10.0
 	github.com/xxxsen/runner v0.0.1
 )

@@ -5,10 +5,8 @@ import (
 	"cf_ddns/model"
 	"cf_ddns/notifier"
 	"context"
-	"encoding/json"
 	"fmt"
 	"html/template"
-	"io"
 	"net/http"
 
 	"github.com/xxxsen/common/utils"
@@ -17,11 +15,6 @@ import (
 type tgMsgNotifier struct {
 	c    *config
 	tplt *template.Template
-}
-
-type rspFrame struct {
-	Code    uint32 `json:"code"`
-	Message string `json:"message"`
 }
 
 func NewTGMsgNotifier(opts ...Option) (notifier.INotifier, error) {
@@ -56,9 +49,8 @@ func (n *tgMsgNotifier) Notify(ctx context.Context, nt *model.Notification) erro
 	if err != nil {
 		return err
 	}
-	req.Header.Add("user", n.c.user)
-	req.Header.Add("code", n.c.code)
-	req.Header.Add("mode", "html")
+	req.SetBasicAuth(n.c.user, n.c.code)
+	req.Header.Add("x-message-type", "tg_raw_html")
 	rsp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -67,18 +59,6 @@ func (n *tgMsgNotifier) Notify(ctx context.Context, nt *model.Notification) erro
 	if rsp.StatusCode != http.StatusOK {
 		return fmt.Errorf("invalid status code:%d", rsp.StatusCode)
 	}
-	raw, err := io.ReadAll(rsp.Body)
-	if err != nil {
-		return err
-	}
-	frame := &rspFrame{}
-	if err := json.Unmarshal(raw, frame); err != nil {
-		return err
-	}
-	if frame.Code != 0 {
-		return fmt.Errorf("send msg failed, code:%d, msg:%s", frame.Code, frame.Message)
-	}
-
 	return nil
 }
 

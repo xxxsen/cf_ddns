@@ -62,7 +62,7 @@ func (r *Refresher) refresh() {
 		return
 	}
 	if err := r.c.cb(ctx, &model.Notification{
-		Title:     "[CF_DDNS] IP Change Notification",
+		Title:     "CF_DDNS: IP Change Notification",
 		Refresher: r.c.name,
 		Domain:    r.c.record,
 		Time:      time.Now(),
