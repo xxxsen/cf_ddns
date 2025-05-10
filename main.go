@@ -11,6 +11,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/xxxsen/common/logger"
@@ -108,14 +109,14 @@ func buildRefresher(refresherConfigList []config.RefreshCongfig, pm map[string]p
 }
 
 func main() {
-	logger := logger.Init("", "info", 0, 0, 0, true)
-	logger.Info("support providers", zap.Strings("providers", provider.List()))
-	logger.Info("support notifiers", zap.Strings("notifiers", notifier.List()))
 	flag.Parse()
 	c, err := config.Parse(*cfg)
 	if err != nil {
-		logger.Fatal("parse config failed", zap.Error(err))
+		log.Fatalf("parse config failed, err:%v", err)
 	}
+	logger := logger.Init(c.LogConfig.File, c.LogConfig.Level, int(c.LogConfig.FileCount), int(c.LogConfig.FileSize), int(c.LogConfig.KeepDays), c.LogConfig.Console)
+	logger.Info("support providers", zap.Strings("providers", provider.List()))
+	logger.Info("support notifiers", zap.Strings("notifiers", notifier.List()))
 	ps, err := createProviderMap(c.ProviderList)
 	if err != nil {
 		logger.Fatal("create provider map failed", zap.Error(err))

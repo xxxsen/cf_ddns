@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+
+	"github.com/xxxsen/common/logger"
 )
 
 type ProviderConfig struct {
@@ -41,6 +43,7 @@ type Config struct {
 	ProviderList  []ProviderConfig `json:"provider_list"`
 	NotifierList  []NotifierConfig `json:"notifier_list"`
 	RefresherList []RefreshCongfig `json:"refresher_list"`
+	LogConfig     logger.LogConfig `json:"log_config"`
 }
 
 func Parse(file string) (*Config, error) {
